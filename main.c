@@ -17,6 +17,13 @@ int direction, score, last_score, game_over, gra, przeszkody, s_time;
 int wyjscie, menu_enter, menu_opcja, poziom_trudnosci = 0;
 int obstacle_x[32], obstacle_y[32], fcoords[2];
 
+typedef struct wyniki{
+char nazwa[20];
+int wynik;
+} Wyniki;
+
+Wyniki gracze[3];
+
 
 typedef struct Menu {
     char mainMENU[4][30];
@@ -187,7 +194,6 @@ void sterowanie() {
     printf("\t%c - sterowanie w dol\n",25);
     printf("\t< - sterowanie w lewo\n");
     printf("\t> - sterowanie w prawo\n");
-
 }
 
 void poziomy_trudnosci() {
@@ -259,41 +265,39 @@ void printAt(int x, int y, char c) {
     printf("%c", c);
 }
 
-int najlepszy_wynik(int poziom_trudnosci) {
+void wczytaj_wyniki() {
     FILE*F=fopen("wyniki.txt","r");
     if(F==NULL) {
-        printf("blad odczytu pliki\n");
+        printf("blad odczytu pliku\n");
     } else {
-        int wyniki[3];
         int i=0;
-        int d;
-        for(i=0;i<3;i++) {
-            fscanf(F,"%d",&wyniki[i]);
+        while(fscanf(F,"%s %d", gracze[i].nazwa, &gracze[i].wynik) == 2) {
+            if(strlen(gracze[i].nazwa) <1) {
+                gracze[i].nazwa == "Brak";
+            }
+            i++;
         }
         fclose(F);
-        return wyniki[poziom_trudnosci];
     }
-
 }
 
-void update_wynik(int poziom_trudnosci,int wynik) {
-    FILE*F=fopen("wyniki.txt","r");
-    int wyniki[3];
-    if(F!=NULL) {
-        int i;
-        for(i=0;i<3;i++) {
-            fscanf(F,"%d",&wyniki[i]);
-        }
-    }
-    fclose(F);
+int najlepszy_wynik(int poziom_trudnosci) {
+    return gracze[poziom_trudnosci].wynik;
+}
+
+void update_wynik(int poziom_trudnosci,int wynik, char nick[20]) {
     FILE*H=fopen("wyniki.txt","w");
     if(H!=NULL) {
         int i;
         for(i=0;i<3;i++) {
             if(i==poziom_trudnosci) {
-                fprintf(H,"%d\n",wynik);
+                fprintf(H,"%s %d\n",nick,wynik);
             } else {
-                fprintf(H,"%d\n",wyniki[i]);
+                if(strlen(gracze[i].nazwa) <1) {
+                    fprintf(H,"brak %d\n",gracze[i].wynik);
+                } else {
+                    fprintf(H,"%s %d\n",gracze[i].nazwa,gracze[i].wynik);
+                }
             }
         }
     }
@@ -309,21 +313,21 @@ void print_przeszkody(int symbol) {
     }
 }
 
-void plansza(int width,int height,int symbol) {
+void plansza(int width,int height) {
     int i;
     for(i=2;i<width+4;i++) {
         gotoxy(i,2);
-        printf("%c",symbol);
+        printf("%c",219);
         gotoxy(i,height+3);
-        printf("%c",symbol);
+        printf("%c",219);
     }
     for(i=3;i<height+3;i++) {
         gotoxy(2,i);
-        printf("%c",symbol);
+        printf("%c",219);
         gotoxy(width+3,i);
-        printf("%c",symbol);
+        printf("%c",219);
     }
-    print_przeszkody(symbol);
+    print_przeszkody(219);
 }
 
 void wyswietl_wyniki() {
@@ -331,19 +335,31 @@ void wyswietl_wyniki() {
         printf("| NAJLEPSZE WYNIKI |\n");
         gotoxy(48,9);
         SetColor(10,0);
-        printf("Latwy\t\t\t");
+        printf("Latwy\t\t");
         SetColor(7,0);
-        printf("%d",najlepszy_wynik(0));
+        if(strlen(gracze[0].nazwa) <1 || (strcmp(gracze[0].nazwa,"brak")==0 && gracze[0].wynik==0)) {
+            printf("Brak");
+        } else {
+            printf("%s: %d",gracze[0].nazwa, gracze[0].wynik);
+        }
         gotoxy(48,11);
         SetColor(6,0);
-        printf("Sredni\t\t\t");
+        printf("Sredni\t\t");
         SetColor(7,0);
-        printf("%d",najlepszy_wynik(1));
+        if(strlen(gracze[1].nazwa) <1 || (strcmp(gracze[1].nazwa,"brak")==0 && gracze[1].wynik==0)) {
+            printf("Brak");
+        } else {
+            printf("%s: %d",gracze[1].nazwa, gracze[1].wynik);
+        }
         gotoxy(48,13);
         SetColor(4,0);
-        printf("Trudny\t\t\t");
+        printf("Trudny\t\t");
         SetColor(7,0);
-        printf("%d",najlepszy_wynik(2));
+        if(strlen(gracze[2].nazwa) <1 || (strcmp(gracze[2].nazwa,"brak")==0 && gracze[2].wynik==0)) {
+            printf("Brak");
+        } else {
+            printf("%s: %d",gracze[2].nazwa, gracze[2].wynik);
+        }
 }
 
 void igame_over() {
@@ -563,13 +579,14 @@ void wyczysc_plansze() {
             SetColor(7,0);
         }
     }
-    print_przeszkody('#');
+    print_przeszkody(219);
 }
 
 int main() {
     SetConsoleTitle("SNAKE");
     srand(time(NULL));
     init_obstacles();
+    wczytaj_wyniki();
     printf("\e[?25l"); //ukrywanie kursora
     int menu_opcja = 0;
     int menu_opcja1 = 0;
@@ -693,7 +710,7 @@ int main() {
                     s_time=HARD;
                 } break;
             }
-            plansza(30,20,'#');
+            plansza(30,20);
             gotoxy(40,9);
             printf("WYNIK: %d",score);
             gotoxy(40,11);
@@ -704,6 +721,8 @@ int main() {
                 wyczysc_plansze();
                 init_snake();
                 last_score=0;
+                gotoxy(40,13);
+                printf("                                                           ");
                 while(!game_over) {
                     input();
                     update(poziom_trudnosci);
@@ -721,7 +740,21 @@ int main() {
                         gotoxy(8,15);
                         SetColor(14,0);
                         printf("Nowy najlepszy wynik!");
-                        update_wynik(poziom_trudnosci,last_score);
+                        gotoxy(7,16);
+                        printf("Podaj nick aby zapisac");
+                        int zapisznick=0;
+                        while(!zapisznick) {
+                            gotoxy(40,13);
+                            SetColor(7,0);
+                            printf("\e[?25h");
+                            printf("PODAJ NICK: ");
+                            char nick[20];
+                            scanf("%s",nick);
+                            zapisznick=1;
+                            update_wynik(poziom_trudnosci,last_score,nick);
+                            wczytaj_wyniki();
+                            printf("\e[?25l");
+                        }
                         gotoxy(40,11);
                         SetColor(7,0);
                         printf("NAJLEPSZY WYNIK: %d",najlepszy_wynik(poziom_trudnosci));
