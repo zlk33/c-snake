@@ -1,1 +1,3 @@
-Kuba 12
+kuba 72
+brak 0
+ok 19

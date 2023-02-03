@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <windows.h>
 
+//Rozmiar planszy
 #define WIDTH 30
 #define HEIGHT 20
 
@@ -12,7 +13,7 @@
 
 int snake_x, snake_y, food_x, food_y;
 int last_snake_x, last_snake_y, last_tail_x, last_tail_y;
-int tail_x[250], tail_y[250], tail_length, debug = 0;
+int tail_x[250], tail_y[250], tail_length;
 int direction, score, last_score, game_over, gra, przeszkody, s_time;
 int wyjscie, menu_enter, menu_opcja, poziom_trudnosci = 0;
 int obstacle_x[32], obstacle_y[32], fcoords[2];
@@ -216,20 +217,26 @@ void poziomy_trudnosci() {
 
 void randomcoords(int przeszkody) {
     while (1) {
-        int x = rand() % 30 + 3; 
-        int y = rand() % 20 + 3; 
-        int f = 1; 
+        int x = rand() % 30 + 3;
+        int y = rand() % 20 + 3;
+        int f = 1;
         int j,h;
         if(x==snake_x && y==snake_y) {
             f=0;
             break;
-        } else {
-            for(j=0;j<tail_length;j++) {
-                if(tail_x[j]==x && tail_y[j]==y) {
-                    f=0;
-                    break;
-                } 
-            }
+        } else if(x==last_tail_x && y==last_tail_y) {
+                f=0;
+                break;
+            } else if(x==last_snake_x && y==last_snake_y) {
+                f=0;
+                break;
+            } else {
+                for(j=0;j<tail_length;j++) {
+                    if(tail_x[j]==x && tail_y[j]==y) {
+                        f=0;
+                        break;
+                    }
+                }
             if(przeszkody) {
                 for(h = 0; h < 32; h++) {
                     if (obstacle_x[h] == x && obstacle_y[h] == y) {
@@ -247,10 +254,13 @@ void randomcoords(int przeszkody) {
     }
 }
 
-
 void init_snake() {
     snake_x = (WIDTH+4)/2;
     snake_y = (HEIGHT+4)/2;
+    last_tail_x=snake_x;
+    last_tail_y=snake_y;
+    last_snake_x=snake_x;
+    last_snake_y=snake_y;
     randomcoords(przeszkody);
     food_x=fcoords[0];
     food_y=fcoords[1];
@@ -304,28 +314,57 @@ void update_wynik(int poziom_trudnosci,int wynik, char nick[20]) {
     fclose(H);
 }
 
-void print_przeszkody(int symbol) {
+void print_przeszkody() {
     if(przeszkody) {
         int i;
-        for(i=0;i<32;i++) {
-            printAt(obstacle_x[i],obstacle_y[i],symbol);
+        for(i=3;i<9;i++) {
+            gotoxy(11,i);
+            printf("%c",186);
+        }
+        for(i=23;i<33;i++) {
+            gotoxy(i,11);
+            printf("%c",205);
+        }
+        for(i=9;i<21;i++) {
+            gotoxy(i,19);
+            printf("%c",205);
+        }
+        gotoxy(8,19);
+        printf("%c",200);
+        for(i=16;i<19;i++) {
+            gotoxy(8,i);
+            printf("%c",186);
         }
     }
 }
 
 void plansza(int width,int height) {
     int i;
-    for(i=2;i<width+4;i++) {
+    gotoxy(2,2);
+    printf("%c",201);
+    gotoxy(33,2);
+    printf("%c",187);
+    gotoxy(2,23);
+    printf("%c",200);
+    gotoxy(33,23);
+    printf("%c",188);
+    for(i=3;i<width+3;i++) {
         gotoxy(i,2);
-        printf("%c",219);
+        printf("%c",205);
         gotoxy(i,height+3);
-        printf("%c",219);
+        printf("%c",205);
     }
     for(i=3;i<height+3;i++) {
         gotoxy(2,i);
-        printf("%c",219);
+        printf("%c",186);
         gotoxy(width+3,i);
-        printf("%c",219);
+        printf("%c",186);
+    }
+    if(przeszkody) {
+        gotoxy(11,2);
+        printf("%c",203);
+        gotoxy(33,11);
+        printf("%c",185);
     }
     print_przeszkody(219);
 }
@@ -378,7 +417,6 @@ void update(int poziom_trudnosci) {
             }
         }
     }
-
     if(score>najlepszy_wynik(poziom_trudnosci)) {
         SetColor(14,0);
         gotoxy(47,9);
@@ -394,82 +432,39 @@ void update(int poziom_trudnosci) {
     }
     
     if(!game_over) {
-       // if(last_snake_x!=2 && last_snake_y!=2) {
-            if(last_snake_x!=0) {
-                SetColor(8,0);
-                printAt(last_snake_x, last_snake_y, '.');
-                SetColor(7,0);
-            }
-       // }
-        if(tail_length>0) {
-            if(last_tail_x!=0) {
+        if(last_snake_x!=0) {
+            SetColor(8,0);
+            printAt(last_snake_x, last_snake_y, '.');
+            SetColor(7,0);
+        }
+       if(tail_length>0) {
+           if(last_tail_x!=0) {
                 SetColor(8,0);
                 printAt(last_tail_x,last_tail_y,'.');
                 SetColor(7,0);
-            }
-                
+            }   
         }
         SetColor(4,0);
         printAt(food_x, food_y, 3);
         SetColor(2,0);
-       // if(snake_x!=2 && snake_y!=2) {
-            printAt(snake_x, snake_y, 'O');
-        //}
+        printAt(snake_x, snake_y, 'O');
         int i;
         for (i = 0; i < tail_length; i++) {
-            last_tail_x = tail_x[i];
-            last_tail_y = tail_y[i];
+            if(tail_length>0) {
+                last_tail_x = tail_x[i];
+                last_tail_y = tail_y[i];
+            }
             if(last_tail_x==last_snake_x) {
                 printAt(tail_x[i], tail_y[i], 'o');
             }
         }
     }
+    SetColor(7,0);
     //kolizja ze sciana
     if(poziom_trudnosci>0) {
         if((snake_x==3 && direction==3) || (snake_x==32 && direction==1) || (snake_y==3 & direction==0) || (snake_y==22 && direction==2)) {
             igame_over();
         }
-    }
-    SetColor(7,0);
-    if(debug) {
-        gotoxy(80,7);
-        printf("                    ");
-        gotoxy(80,7);
-        printf("FOOD X=%d Y=%d",food_x,food_y);
-        gotoxy(80,8);
-        printf("                    ");
-        gotoxy(80,8);
-        printf("HEAD X=%d Y=%d",snake_x,snake_y);
-        gotoxy(80,9);
-        printf("                    ");
-        gotoxy(80,9);
-        printf("LAST_HEAD X=%d Y=%d",last_snake_x,last_snake_y);
-        gotoxy(80,10);
-        printf("Direction: %d",direction);
-        gotoxy(80,11);
-        printf("                    ");
-        gotoxy(80,11);
-        printf("TAIL_LENGTH=%d",tail_length);
-        gotoxy(80,12);
-        printf("                    ");
-        gotoxy(80,12); 
-        printf("LAST_TAIL X=%d Y=%d",last_tail_x,last_tail_y);
-        gotoxy(80,13);
-        printf("                    ");
-        gotoxy(80,13);
-        printf("TAIL[L] X=%d Y=%d",tail_x[tail_length],tail_y[tail_length]);
-        gotoxy(80,14);
-        printf("                    ");
-        gotoxy(80,14);
-        printf("TAIL[0] X=%d Y=%d",tail_x[0],tail_y[0]);
-        gotoxy(80,15);
-        printf("                    ");
-        gotoxy(80,15);
-        printf("S_TIME: %dMS",s_time);
-        gotoxy(80,16);
-        printf("                    ");
-        gotoxy(80,16);
-        printf("OBSTACLES: %d",przeszkody);
     }
 }
 
@@ -555,12 +550,13 @@ void move() {
     if (snake_y >= HEIGHT+3) {
         snake_y = 3;
     }
-
+    //zjedzenie ogona
     for (i = 0; i < tail_length; i++) {
         if (tail_x[i] == snake_x && tail_y[i] == snake_y) {
             igame_over();
         }
     }
+    //zjedzenie jedzenia
     if (snake_x == food_x && snake_y == food_y) {
         tail_length++;
         score += 1;
