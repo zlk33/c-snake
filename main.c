@@ -215,6 +215,20 @@ void poziomy_trudnosci() {
 
 }
 
+int spr(int x,int y) {
+    if(przeszkody) {
+        int i;
+        for(i=0;i<32;i++) {
+            if(obstacle_x[i]==x && obstacle_y[i]==y) {
+                return 0;
+            }
+        }
+    return 1;
+    } else {
+        return 1;
+    }
+}
+
 void randomcoords(int przeszkody) {
     while (1) {
         int x = rand() % 30 + 3;
@@ -257,10 +271,6 @@ void randomcoords(int przeszkody) {
 void init_snake() {
     snake_x = (WIDTH+4)/2;
     snake_y = (HEIGHT+4)/2;
-    last_tail_x=snake_x;
-    last_tail_y=snake_y;
-    last_snake_x=snake_x;
-    last_snake_y=snake_y;
     randomcoords(przeszkody);
     food_x=fcoords[0];
     food_y=fcoords[1];
@@ -438,7 +448,7 @@ void update(int poziom_trudnosci) {
             SetColor(7,0);
         }
        if(tail_length>0) {
-           if(last_tail_x!=0) {
+           if(last_tail_x!=0 && spr(last_tail_x,last_tail_y)) {
                 SetColor(8,0);
                 printAt(last_tail_x,last_tail_y,'.');
                 SetColor(7,0);
@@ -448,12 +458,13 @@ void update(int poziom_trudnosci) {
         printAt(food_x, food_y, 3);
         SetColor(2,0);
         printAt(snake_x, snake_y, 'O');
+
         int i;
         for (i = 0; i < tail_length; i++) {
             if(tail_length>0) {
                 last_tail_x = tail_x[i];
                 last_tail_y = tail_y[i];
-            }
+             }
             if(last_tail_x==last_snake_x) {
                 printAt(tail_x[i], tail_y[i], 'o');
             }
@@ -502,8 +513,8 @@ void input() {
                 gra = 0;
                 game_over = 1;
                 wyjscie = 1;
-                menu_enter=0;
-                menu_opcja=0;
+                menu_enter = 0;
+                menu_opcja = 0;
             } break;
         }
     }
@@ -606,7 +617,7 @@ int main() {
         sterowanie();
         poziomy_trudnosci();
         while(!menu_enter) {
-            while (!_kbhit());
+            while (!_kbhit()); 
             c = getch();
             if(c==13) {
                 if(menu_opcja!=1) {
