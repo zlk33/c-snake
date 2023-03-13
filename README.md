@@ -1,6 +1,7 @@
 # c-snake
 Projekt na Podstawy Programowania Strukturalnego
 ### Co zawiera? 
+* Błędy :)
 * Brak efektu "migotania"
 * Różne poziomy trudności
 * Zapisywanie najlepszych wyników do pliku .txt
