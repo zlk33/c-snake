@@ -440,7 +440,7 @@ void update(int poziom_trudnosci) {
         gotoxy(47,9);
         printf("%d",score);
     }
-    
+
     if(!game_over) {
         if(last_snake_x!=0) {
             SetColor(8,0);
@@ -452,10 +452,10 @@ void update(int poziom_trudnosci) {
                 SetColor(8,0);
                 printAt(last_tail_x,last_tail_y,'.');
                 SetColor(7,0);
-            }   
+            }
         }
         SetColor(4,0);
-        printAt(food_x, food_y, 3);
+        printAt(food_x, food_y, '+');
         SetColor(2,0);
         printAt(snake_x, snake_y, 'O');
 
@@ -617,7 +617,7 @@ int main() {
         sterowanie();
         poziomy_trudnosci();
         while(!menu_enter) {
-            while (!_kbhit()); 
+            while (!_kbhit());
             c = getch();
             if(c==13) {
                 if(menu_opcja!=1) {
